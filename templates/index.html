@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toggle App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .boxes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .toggle-box {
+            background: #f0f0f0;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 150px;
+            user-select: none;
+        }
+
+        .toggle-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .toggle-box.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+
+        .box-label {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .box-status {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .box-status::before {
+            content: attr(data-status);
+        }
+
+        .toggle-box.active .box-status::before {
+            content: '✓ ON';
+        }
+
+        .toggle-box:not(.active) .box-status::before {
+            content: '○ OFF';
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-reset {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+
+        .btn-all-on {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-all-on:hover {
+            background: #40c057;
+            transform: scale(1.05);
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stat-number {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.3em;
+        }
+
+        .voice-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 15px;
+            border: 2px solid #ddd;
+        }
+
+        .voice-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .voice-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .voice-btn.listening {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+            }
+        }
+
+        .voice-status {
+            margin-top: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            min-height: 30px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .voice-status.active {
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .voice-commands {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .voice-commands h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .voice-commands ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .voice-commands li {
+            padding: 5px 0;
+        }
+
+        .voice-commands code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔀 Toggle App</h1>
+        <p class="subtitle">Click any box to toggle it on/off</p>
+        
+        <div class="boxes-grid" id="boxesContainer"></div>
+        
+        <div class="controls">
+            <button class="btn-all-on" onclick="toggleAllOn()">All ON</button>
+            <button class="btn-reset" onclick="resetAll()">Reset All</button>
+        </div>
+
+        <div class="stats">
+            Boxes ON: <span class="stat-number" id="count">0</span> / 12
+        </div>
+
+        <div class="voice-section">
+            <h2>🎤 Voice Control</h2>
+            <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceListening()">
+                <span id="voiceBtnText">🎙️ Start Listening</span>
+            </button>
+            <div class="voice-status" id="voiceStatus">Ready to listen</div>
+            
+            <div class="voice-commands">
+                <h4>📢 Try these voice commands:</h4>
+                <ul>
+                    <li><code>toggle box 2</code> - Toggle box 2</li>
+                    <li><code>untoggle box 2</code> - Turn OFF box 2</li>
+                    <li><code>box 3</code> - Toggle box 3</li>
+                    <li><code>toggle 5</code> - Toggle box 5</li>
+                    <li><code>switch box 1</code> - Toggle box 1</li>
+                    <li><code>turn on box 4</code> - Turn ON box 4</li>
+                    <li><code>turn off box 6</code> - Turn OFF box 6</li>
+                    <li><code>two box</code> - Toggle box 2 (spoken numbers)</li>
+                    <li><code>all on</code> - Turn all boxes ON</li>
+                    <li><code>reset</code> or <code>all off</code> - Turn all boxes OFF</li>
+                    <li><code>stop</code> or <code>stop listening</code> - Stop listening</li>
+                    <li><strong>💡 Tip:</strong> Say numbers clearly - "two" not "to"</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const totalBoxes = 12;
+        let boxStates = {};
+        let voiceActive = false;
+        let recognition = null;
+
+        // Initialize speech recognition
+        function initSpeechRecognition() {
+            console.log('🎤 Initializing speech recognition...');
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                console.error('❌ Speech Recognition not supported in this browser');
+                alert('Speech Recognition not supported in this browser. Please use Chrome, Edge, or Safari.');
+                return false;
+            }
+
+            console.log('✅ Speech Recognition API available');
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            console.log('🎙️ Speech recognition configured:', {
+                continuous: recognition.continuous,
+                interimResults: recognition.interimResults,
+                lang: recognition.lang
+            });
+
+            recognition.onstart = () => {
+                console.log('🎙️ Speech recognition started');
+                voiceActive = true;
+                const btn = document.getElementById('voiceBtn');
+                const btnText = document.getElementById('voiceBtnText');
+                btn.classList.add('listening');
+                btnText.textContent = '🛑 Stop Listening';
+                updateVoiceStatus('Listening... Speak now!', true);
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    console.log(`🔍 Processing result ${i}:`, result);
+                    
+                    // Access transcript from the first alternative
+                    const transcript = result[0] && result[0].transcript ? result[0].transcript.toLowerCase().trim() : '';
+                    
+                    if (!transcript) {
+                        console.warn(`⚠️ Empty transcript for result ${i}:`, result);
+                        continue;
+                    }
+                    
+                    console.log(`🎤 Result ${i}: "${transcript}" (isFinal: ${result.isFinal})`);
+
+                    if (result.isFinal) {
+                        finalTranscript = transcript;
+                    } else {
+                        interimTranscript = transcript;
+                    }
+                }
+
+                if (interimTranscript) {
+                    updateVoiceStatus(`Listening: "${interimTranscript}"`, true);
+                }
+
+                if (finalTranscript) {
+                    console.log('🎯 Final transcript:', finalTranscript);
+                    updateVoiceStatus(`Recognized: "${finalTranscript}"`, true);
+                    setTimeout(() => processVoiceCommand(finalTranscript), 500); // Small delay for better UX
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('❌ Speech recognition error:', event.error, event);
+                updateVoiceStatus(`Error: ${event.error}`, true);
+            };
+
+            recognition.onend = () => {
+                console.log('🛑 Speech recognition ended');
+                if (voiceActive) {
+                    console.log('🔄 Restarting speech recognition...');
+                    recognition.start(); // Restart to keep listening
+                } else {
+                    const btn = document.getElementById('voiceBtn');
+                    const btnText = document.getElementById('voiceBtnText');
+                    btn.classList.remove('listening');
+                    btnText.textContent = '🎙️ Start Listening';
+                    updateVoiceStatus('Stopped listening', false);
+                }
+            };
+
+            return true;
+        }
+
+        // Process voice commands
+        function processVoiceCommand(command) {
+            console.log('🎤 Voice command received:', command);
+            console.log('📝 Command length:', command.length);
+            console.log('🔍 Command includes "toggle":', command.includes('toggle'));
+            console.log('🔍 Command includes "untoggle":', command.includes('untoggle'));
+            console.log('🔍 Command includes "box":', command.includes('box'));
+
+            // Stop listening commands
+            if (command.includes('stop') || command.includes('listening off') || command.includes('stop listening')) {
+                console.log('🛑 Stop command detected');
+                toggleVoiceListening();
+                updateVoiceStatus('Listening stopped', false);
+                return;
+            }
+
+            // All on command
+            if (command.includes('all on') || command.includes('turn all on') || command.includes('all boxes on')) {
+                console.log('✅ All ON command detected');
+                toggleAllOn();
+                updateVoiceStatus('✓ All boxes turned ON!', true);
+                return;
+            }
+
+            // Reset/All off command
+            if (command.includes('reset') || command.includes('all off') || command.includes('turn all off') || command.includes('clear all')) {
+                console.log('🔄 Reset command detected');
+                resetAll();
+                updateVoiceStatus('✓ All boxes turned OFF!', true);
+                return;
+            }
+
+            // Toggle specific box patterns
+            const boxPatterns = [
+                /box\s+(\d+)/,           // "box 2"
+                /box\s+(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|to|too|for|tree|ate|it|won|want|night)/i,  // "box two" or misrecognized words
+                /toggle\s+(\d+)/,        // "toggle 2"
+                /toggle\s+box\s+(\d+)/,  // "toggle box 2"
+                /untoggle\s+(\d+)/,      // "untoggle 2"
+                /untoggle\s+box\s+(\d+)/, // "untoggle box 2"
+                /switch\s+(\d+)/,        // "switch 2"
+                /switch\s+box\s+(\d+)/,  // "switch box 2"
+                /(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|to|too|for|tree|ate|it|won|want|night)\s+box/i,  // "two box" or misrecognized
+                /(\d+)/,                 // Just any number (fallback)
+                /number\s+(\d+)/i        // "number 2"
+            ];
+
+            let boxNum = null;
+            let action = 'toggle'; // default action
+            let matchedPattern = null;
+
+            console.log('🔎 Checking for turn on/off commands...');
+            // Check for turn on/off commands first
+            if (command.includes('turn on') || command.includes('enable') || command.includes('activate') || command.includes('on')) {
+                action = 'on';
+                console.log('🔛 Action set to: ON');
+            } else if (command.includes('turn off') || command.includes('disable') || command.includes('deactivate') || command.includes('off') || command.includes('untoggle')) {
+                action = 'off';
+                console.log('🔚 Action set to: OFF');
+            } else {
+                console.log('🔄 Action set to: TOGGLE (default)');
+            }
+
+            console.log('🔍 Testing box patterns...');
+            // Try to match box number
+            for (let i = 0; i < boxPatterns.length; i++) {
+                const pattern = boxPatterns[i];
+                const match = command.match(pattern);
+                console.log(`Pattern ${i + 1}: ${pattern} -> Command: "${command}" -> Match:`, match);
+                if (match) {
+                    matchedPattern = pattern;
+                    if (match[1]) {
+                        // Convert word numbers to digits
+                        const wordToNum = {
+                            'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+                            'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+                            'eleven': 11, 'twelve': 12,
+                            // Common misrecognitions
+                            'to': 2, 'too': 2, 'for': 4, 'tree': 3, 'ate': 8,
+                            'it': 1, 'won': 1, 'want': 1, 'ate': 8, 'night': 9
+                        };
+
+                        if (isNaN(match[1])) {
+                            boxNum = wordToNum[match[1].toLowerCase()];
+                            console.log(`📝 Word "${match[1]}" converted to number: ${boxNum}`);
+                        } else {
+                            boxNum = parseInt(match[1]);
+                            console.log(`📝 Number extracted: ${boxNum}`);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            console.log('🎯 Final results:');
+            console.log('- Box number:', boxNum);
+            console.log('- Action:', action);
+            console.log('- Matched pattern:', matchedPattern);
+
+            if (boxNum && boxNum >= 1 && boxNum <= totalBoxes) {
+                const boxId = `box_${boxNum - 1}`;
+                console.log(`✅ Valid box ${boxNum} (ID: ${boxId})`);
+
+                if (action === 'on') {
+                    if (!boxStates[boxId]) {
+                        console.log('🔄 Toggling box ON');
+                        toggleBox(boxId);
+                    } else {
+                        console.log('⚠️ Box already ON, skipping');
+                    }
+                    updateVoiceStatus(`✓ Box ${boxNum} is ON`, true);
+                } else if (action === 'off') {
+                    if (boxStates[boxId]) {
+                        console.log('🔄 Toggling box OFF');
+                        toggleBox(boxId);
+                    } else {
+                        console.log('⚠️ Box already OFF, skipping');
+                    }
+                    updateVoiceStatus(`✓ Box ${boxNum} is OFF`, true);
+                } else {
+                    console.log('🔄 Toggling box (default action)');
+                    toggleBox(boxId);
+                    updateVoiceStatus(`✓ Box ${boxNum} toggled!`, true);
+                }
+                return;
+            } else {
+                console.log('❌ Invalid box number or no match found');
+            }
+
+            console.log('❌ Command not recognized');
+            updateVoiceStatus(`Command not recognized: "${command}"`, true);
+        }
+
+        // Toggle voice listening
+        function toggleVoiceListening() {
+            if (!voiceActive) {
+                if (initSpeechRecognition()) {
+                    recognition.start();
+                }
+            } else {
+                voiceActive = false;
+                if (recognition) {
+                    recognition.stop();
+                }
+            }
+        }
+
+        // Update voice status display
+        function updateVoiceStatus(message, isActive) {
+            const status = document.getElementById('voiceStatus');
+            status.textContent = message;
+            if (isActive) {
+                status.classList.add('active');
+            } else {
+                status.classList.remove('active');
+            }
+        }
+
+        // Initialize the app
+        async function init() {
+            // Get current states from server
+            const response = await fetch('/api/states');
+            boxStates = await response.json();
+            
+            // Create boxes
+            const container = document.getElementById('boxesContainer');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < totalBoxes; i++) {
+                const boxId = `box_${i}`;
+                const isActive = boxStates[boxId];
+                
+                const box = document.createElement('div');
+                box.className = `toggle-box ${isActive ? 'active' : ''}`;
+                box.id = boxId;
+                box.innerHTML = `
+                    <div class="box-label">Box ${i + 1}</div>
+                    <div class="box-status" data-status="${isActive ? 'ON' : 'OFF'}"></div>
+                `;
+                
+                box.addEventListener('click', () => toggleBox(boxId));
+                container.appendChild(box);
+            }
+            
+            updateCount();
+            initSpeechRecognition();
+        }
+
+        // Toggle a single box
+        async function toggleBox(boxId) {
+            try {
+                const response = await fetch('/api/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ box_id: boxId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const box = document.getElementById(boxId);
+                    const newState = data.state;
+                    boxStates[boxId] = newState;
+                    
+                    if (newState) {
+                        box.classList.add('active');
+                    } else {
+                        box.classList.remove('active');
+                    }
+                    
+                    updateCount();
+                }
+            } catch (error) {
+                console.error('Error toggling box:', error);
+            }
+        }
+
+        // Toggle all boxes ON
+        async function toggleAllOn() {
+            for (let i = 0; i < totalBoxes; i++) {
+                const boxId = `box_${i}`;
+                if (!boxStates[boxId]) {
+                    await toggleBox(boxId);
+                }
+            }
+        }
+
+        // Reset all boxes
+        async function resetAll() {
+            try {
+                const response = await fetch('/api/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    boxStates = data.states;
+                    // Update UI
+                    document.querySelectorAll('.toggle-box').forEach(box => {
+                        box.classList.remove('active');
+                    });
+                    updateCount();
+                }
+            } catch (error) {
+                console.error('Error resetting:', error);
+            }
+        }
+
+        // Update the count display
+        function updateCount() {
+            const count = Object.values(boxStates).filter(state => state).length;
+            document.getElementById('count').textContent = count;
+        }
+
+        // Start the app when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
