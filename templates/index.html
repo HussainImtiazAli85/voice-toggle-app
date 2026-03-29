@@ -266,10 +266,15 @@
 
         <div class="voice-section">
             <h2>🎤 Voice Control</h2>
-            <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceListening()">
-                <span id="voiceBtnText">🎙️ Start Listening</span>
-            </button>
-            <div class="voice-status" id="voiceStatus">Ready to listen</div>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+                <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceListening()">
+                    <span id="voiceBtnText">🎙️ Start Listening</span>
+                </button>
+                <button class="voice-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="restartVoiceRecognition()">
+                    🔄 Restart Voice
+                </button>
+            </div>
+            <div class="voice-status" id="voiceStatus">🎤 Auto-starting voice recognition...</div>
             
             <div class="voice-commands">
                 <h4>📢 Try these voice commands:</h4>
@@ -314,6 +319,7 @@
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
+            recognition.maxAlternatives = 1;
             console.log('🎙️ Speech recognition configured:', {
                 continuous: recognition.continuous,
                 interimResults: recognition.interimResults,
@@ -361,21 +367,51 @@
 
                 if (finalTranscript) {
                     console.log('🎯 Final transcript:', finalTranscript);
-                    updateVoiceStatus(`Recognized: "${finalTranscript}"`, true);
-                    setTimeout(() => processVoiceCommand(finalTranscript), 500); // Small delay for better UX
+                    updateVoiceStatus(`✅ Recognized: "${finalTranscript}"`, true);
+                    setTimeout(() => processVoiceCommand(finalTranscript), 200); // Faster processing
                 }
             };
 
             recognition.onerror = (event) => {
                 console.error('❌ Speech recognition error:', event.error, event);
-                updateVoiceStatus(`Error: ${event.error}`, true);
+                
+                // Auto-restart on certain errors
+                if (event.error === 'network' || event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    updateVoiceStatus(`❌ Error: ${event.error}. Click to restart.`, false);
+                    voiceActive = false;
+                    const btn = document.getElementById('voiceBtn');
+                    const btnText = document.getElementById('voiceBtnText');
+                    btn.classList.remove('listening');
+                    btnText.textContent = '🎙️ Start Listening';
+                } else {
+                    // Auto-restart for other errors
+                    updateVoiceStatus(`⚠️ Restarting... (${event.error})`, true);
+                    setTimeout(() => {
+                        if (voiceActive) {
+                            recognition.start();
+                        }
+                    }, 1000);
+                }
             };
 
             recognition.onend = () => {
                 console.log('🛑 Speech recognition ended');
+                
+                // Auto-restart if voice is still active
                 if (voiceActive) {
-                    console.log('🔄 Restarting speech recognition...');
-                    recognition.start(); // Restart to keep listening
+                    console.log('🔄 Auto-restarting speech recognition...');
+                    setTimeout(() => {
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.error('Failed to restart:', e);
+                            updateVoiceStatus('❌ Failed to restart. Click to retry.', false);
+                            voiceActive = false;
+                            const btn = document.getElementById('voiceBtn');
+                            btn.classList.remove('listening');
+                            document.getElementById('voiceBtnText').textContent = '🎙️ Start Listening';
+                        }
+                    }, 500); // Faster restart
                 } else {
                     const btn = document.getElementById('voiceBtn');
                     const btnText = document.getElementById('voiceBtnText');
@@ -535,6 +571,22 @@
             }
         }
 
+        // Manual restart function
+        function restartVoiceRecognition() {
+            console.log('🔄 Manual restart requested');
+            voiceActive = false;
+            if (recognition) {
+                recognition.stop();
+            }
+            // Wait a bit then restart
+            setTimeout(() => {
+                if (initSpeechRecognition()) {
+                    voiceActive = true;
+                    recognition.start();
+                }
+            }, 500);
+        }
+
         // Update voice status display
         function updateVoiceStatus(message, isActive) {
             const status = document.getElementById('voiceStatus');
@@ -573,7 +625,13 @@
             }
             
             updateCount();
-            initSpeechRecognition();
+            if (initSpeechRecognition()) {
+                // Auto-start voice recognition
+                console.log('🚀 Auto-starting voice recognition...');
+                setTimeout(() => {
+                    recognition.start();
+                }, 1000); // Wait 1 second for page to fully load
+            }
         }
 
         // Toggle a single box
